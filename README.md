@@ -1,8 +1,8 @@
-# QuickChestCapacity v1.3.2 — Live Hopper Update
+# QuickChestCapacity v1.3.3 — Live Hopper Update
 
 This keeps the v1.3 bottom-centre HUD style and adds live chest capacity updates.
 
-## New in 1.3.2
+## New in 1.3.3
 - The item number updates while hoppers add items.
 - The item number updates while hoppers remove items.
 - The percentage and segmented green/yellow/orange/red bar update with it.
@@ -21,6 +21,6 @@ Minecraft does not normally send a closed chest's inventory contents to a client
 Minecraft 26.2, Java 25, Fabric Loader 0.19.3, Fabric API 0.158.0+26.2.
 
 
-## v1.3.2 visual tweak
+## v1.3.3 visual tweak
 - Slightly smaller capacity bar.
 - Fixed extra space after the final bar segment so the segments fit the background exactly.

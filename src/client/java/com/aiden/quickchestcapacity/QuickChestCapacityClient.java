@@ -111,10 +111,10 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
             return;
         }
 
-        int panelWidth = 210;
-        int panelHeight = 58;
+        int panelWidth = 194;
+        int panelHeight = 54;
         int x = (graphics.guiWidth() - panelWidth) / 2;
-        int y = graphics.guiHeight() - 118;
+        int y = graphics.guiHeight() - 98;
 
         graphics.fill(x, y, x + panelWidth, y + panelHeight, 0xD912120F);
         graphics.outline(x, y, panelWidth, panelHeight, 0xFFF0C14B);
@@ -127,8 +127,8 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
                     : "OPEN THIS CHEST ONCE TO SCAN";
             int tx = x + (panelWidth - minecraft.font.width(title)) / 2;
             int hx = x + (panelWidth - minecraft.font.width(hint)) / 2;
-            graphics.text(minecraft.font, title, tx, y + 12, 0xFFFFC400, true);
-            graphics.text(minecraft.font, hint, hx, y + 34, 0xFFFFFFFF, true);
+            graphics.text(minecraft.font, title, tx, y + 10, 0xFFFFC400, true);
+            graphics.text(minecraft.font, hint, hx, y + 30, 0xFFFFFFFF, true);
             return;
         }
 
@@ -139,16 +139,16 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
         String status = statusText(percent);
         int statusColor = statusColor(percent);
 
-        int chestTypeX = x + 10;
-        int amountX = x + panelWidth - 10 - minecraft.font.width(amount);
-        graphics.text(minecraft.font, chestType, chestTypeX, y + 8, 0xFFFFC400, true);
-        graphics.text(minecraft.font, amount, amountX, y + 8, 0xFFFFFFFF, true);
+        int chestTypeX = x + 8;
+        int amountX = x + panelWidth - 8 - minecraft.font.width(amount);
+        graphics.text(minecraft.font, chestType, chestTypeX, y + 7, 0xFFFFC400, true);
+        graphics.text(minecraft.font, amount, amountX, y + 7, 0xFFFFFFFF, true);
 
-        // Slightly smaller, centred capacity bar.
-        int barWidth = panelWidth - 36;
+        // Smaller, slightly lower centred capacity bar.
+        int barWidth = panelWidth - 40;
         int barX = x + (panelWidth - barWidth) / 2;
-        int barY = y + 25;
-        int barHeight = 11;
+        int barY = y + 24;
+        int barHeight = 10;
         int segments = 20;
         int gap = 2;
         int usableSegmentWidth = barWidth - gap * (segments - 1);
@@ -180,8 +180,8 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
         }
 
         String percentText = percent + "%";
-        graphics.text(minecraft.font, status, x + 10, y + 44, statusColor, true);
-        graphics.text(minecraft.font, percentText, x + panelWidth - 10 - minecraft.font.width(percentText), y + 44, statusColor, true);
+        graphics.text(minecraft.font, status, x + 8, y + 40, statusColor, true);
+        graphics.text(minecraft.font, percentText, x + panelWidth - 8 - minecraft.font.width(percentText), y + 40, statusColor, true);
     }
 
     private static String statusText(int percent) {
