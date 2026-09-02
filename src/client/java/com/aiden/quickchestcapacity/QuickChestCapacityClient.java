@@ -169,24 +169,39 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
 
         CapacityInfo info = displayInfo;
         int percent = info.maxItems == 0 ? 0 : Math.min(100, Math.round((info.itemCount * 100.0f) / info.maxItems));
+        // Custom corner-resizing can make any preset narrow, so automatically
+        // switch to the shorter labels when needed to avoid text overlap.
+        boolean xxSmall = CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.XXSMALL || panelWidth < 145;
+        boolean xSmall = !xxSmall && (CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.XSMALL || panelWidth < 165);
+        boolean compact = xxSmall || xSmall;
+
         String chestType = info.slots == 54 ? "DOUBLE CHEST" : "SINGLE CHEST";
-        String amount = info.itemCount + " / " + info.maxItems;
-        String status = statusText(percent);
+        if (xSmall) {
+            chestType = info.slots == 54 ? "DOUBLE" : "SINGLE";
+        } else if (xxSmall) {
+            chestType = info.slots == 54 ? "D.CHEST" : "S.CHEST";
+        }
+
+        String amount = compact
+                ? info.itemCount + "/" + info.maxItems
+                : info.itemCount + " / " + info.maxItems;
+        String status = compact && percent > 0 && percent <= 70 ? "PARTIAL" : statusText(percent);
         int statusColor = statusColor(percent);
 
-        int sidePadding = CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.SMALL ? 6 : 8;
+        int sidePadding = panelWidth < 145 ? 4 : panelWidth < 165 ? 5 : panelWidth < 185 ? 6 : 8;
         int chestTypeX = x + sidePadding;
         int amountX = x + panelWidth - sidePadding - minecraft.font.width(amount);
-        int titleY = y + (CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.LARGE ? 9 : 7);
+        int titleY = y + (CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.LARGE ? 9 : compact ? 5 : 7);
         graphics.text(minecraft.font, chestType, chestTypeX, titleY, 0xFFFFC400, true);
         graphics.text(minecraft.font, amount, amountX, titleY, 0xFFFFFFFF, true);
 
-        int barWidth = panelWidth - 40;
+        int barInset = panelWidth < 145 ? 24 : panelWidth < 165 ? 28 : panelWidth < 185 ? 34 : 40;
+        int barWidth = panelWidth - barInset;
         int barX = x + (panelWidth - barWidth) / 2;
-        int barY = y + panelHeight / 2 - 3;
+        int barY = y + panelHeight / 2 - (compact ? 2 : 3);
         int barHeight = CONFIG.barHeight();
-        int segments = 20;
-        int gap = 2;
+        int segments = compact ? 16 : 20;
+        int gap = compact ? 1 : 2;
         int usableSegmentWidth = barWidth - gap * (segments - 1);
         int filled = Math.round(percent / 100.0f * segments);
 
@@ -216,7 +231,7 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
         }
 
         String percentText = percent + "%";
-        int statusY = y + panelHeight - 14;
+        int statusY = y + panelHeight - (compact ? 12 : 14);
         graphics.text(minecraft.font, status, x + sidePadding, statusY, statusColor, true);
         graphics.text(minecraft.font, percentText, x + panelWidth - sidePadding - minecraft.font.width(percentText), statusY, statusColor, true);
     }

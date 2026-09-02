@@ -14,10 +14,17 @@ public final class QuickChestCapacityConfig {
             .getConfigDir()
             .resolve("quickchestcapacity.properties");
 
+    // Keeps custom resizing usable without making the text unreadable or the HUD enormous.
+    private static final int MIN_PANEL_WIDTH = 118;
+    private static final int MIN_PANEL_HEIGHT = 36;
+    private static final int MAX_PANEL_WIDTH = 300;
+    private static final int MAX_PANEL_HEIGHT = 82;
+
     private HudSize hudSize = HudSize.NORMAL;
     private HudPosition hudPosition = HudPosition.BOTTOM_CENTER;
     private int offsetX = 0;
     private int offsetY = 0;
+    private float hudScale = 1.0f;
 
     public static QuickChestCapacityConfig load() {
         QuickChestCapacityConfig config = new QuickChestCapacityConfig();
@@ -32,6 +39,8 @@ public final class QuickChestCapacityConfig {
             config.hudPosition = HudPosition.fromString(properties.getProperty("hudPosition"));
             config.offsetX = parseInt(properties.getProperty("offsetX"), 0, -1000, 1000);
             config.offsetY = parseInt(properties.getProperty("offsetY"), 0, -1000, 1000);
+            config.hudScale = parseFloat(properties.getProperty("hudScale"), 1.0f, 0.4f, 2.5f);
+            config.clampScaleToSizeLimits();
         } catch (IOException ignored) {
             // Use defaults if the config cannot be read.
         }
@@ -44,6 +53,7 @@ public final class QuickChestCapacityConfig {
         properties.setProperty("hudPosition", hudPosition.name());
         properties.setProperty("offsetX", Integer.toString(offsetX));
         properties.setProperty("offsetY", Integer.toString(offsetY));
+        properties.setProperty("hudScale", Float.toString(hudScale));
 
         try {
             Files.createDirectories(CONFIG_PATH.getParent());
@@ -71,8 +81,18 @@ public final class QuickChestCapacityConfig {
         return offsetY;
     }
 
+    public int scalePercent() {
+        return Math.round(hudScale * 100.0f);
+    }
+
+    public boolean hasCustomScale() {
+        return Math.abs(hudScale - 1.0f) > 0.005f;
+    }
+
     public void cycleSize() {
         hudSize = hudSize.next();
+        // Selecting a named size gives that preset its normal dimensions again.
+        hudScale = 1.0f;
         save();
     }
 
@@ -89,57 +109,163 @@ public final class QuickChestCapacityConfig {
         save();
     }
 
+    /**
+     * Moves the HUD to an exact top-left position while it is being dragged.
+     * This updates the live preview without writing the config file every mouse frame.
+     */
+    public void setDraggedPosition(int guiWidth, int guiHeight, int panelWidth, int panelHeight, int desiredX, int desiredY) {
+        int clampedX = clamp(desiredX, 2, Math.max(2, guiWidth - panelWidth - 2));
+        int clampedY = clamp(desiredY, 2, Math.max(2, guiHeight - panelHeight - 2));
+
+        int baseX = calculateBaseX(guiWidth, panelWidth);
+        int baseY = calculateBaseY(guiHeight, panelHeight);
+        offsetX = clamp(clampedX - baseX, -1000, 1000);
+        offsetY = clamp(clampedY - baseY, -1000, 1000);
+    }
+
+    /**
+     * Resizes the HUD from its bottom-right corner while keeping the top-left corner fixed.
+     * Width and height are averaged so dragging diagonally preserves the HUD's proportions.
+     */
+    public void setResizedFromCorner(
+            int guiWidth,
+            int guiHeight,
+            int fixedX,
+            int fixedY,
+            int desiredWidth,
+            int desiredHeight
+    ) {
+        int baseWidth = basePanelWidth();
+        int baseHeight = basePanelHeight();
+
+        float widthScale = desiredWidth / (float) baseWidth;
+        float heightScale = desiredHeight / (float) baseHeight;
+        float desiredScale = (widthScale + heightScale) * 0.5f;
+
+        float minScale = Math.max(
+                MIN_PANEL_WIDTH / (float) baseWidth,
+                MIN_PANEL_HEIGHT / (float) baseHeight
+        );
+        float maxScale = Math.min(
+                MAX_PANEL_WIDTH / (float) baseWidth,
+                MAX_PANEL_HEIGHT / (float) baseHeight
+        );
+
+        // Also keep the resized HUD inside the current GUI when possible.
+        maxScale = Math.min(maxScale, Math.max(minScale, (guiWidth - 4) / (float) baseWidth));
+        maxScale = Math.min(maxScale, Math.max(minScale, (guiHeight - 4) / (float) baseHeight));
+
+        hudScale = clamp(desiredScale, minScale, maxScale);
+
+        int newWidth = panelWidth();
+        int newHeight = panelHeight();
+        int clampedFixedX = clamp(fixedX, 2, Math.max(2, guiWidth - newWidth - 2));
+        int clampedFixedY = clamp(fixedY, 2, Math.max(2, guiHeight - newHeight - 2));
+
+        int baseX = calculateBaseX(guiWidth, newWidth);
+        int baseY = calculateBaseY(guiHeight, newHeight);
+        offsetX = clamp(clampedFixedX - baseX, -1000, 1000);
+        offsetY = clamp(clampedFixedY - baseY, -1000, 1000);
+    }
+
+    public void finishDrag() {
+        save();
+    }
+
+    public void finishResize() {
+        save();
+    }
+
     public void reset() {
         hudSize = HudSize.NORMAL;
         hudPosition = HudPosition.BOTTOM_CENTER;
         offsetX = 0;
         offsetY = 0;
+        hudScale = 1.0f;
         save();
     }
 
     public int panelWidth() {
+        return Math.round(basePanelWidth() * hudScale);
+    }
+
+    public int panelHeight() {
+        return Math.round(basePanelHeight() * hudScale);
+    }
+
+    public int barHeight() {
+        return Math.max(4, Math.round(baseBarHeight() * hudScale));
+    }
+
+    private int basePanelWidth() {
         return switch (hudSize) {
+            case XXSMALL -> 142;
+            case XSMALL -> 156;
             case SMALL -> 170;
             case NORMAL -> 194;
             case LARGE -> 230;
         };
     }
 
-    public int panelHeight() {
+    private int basePanelHeight() {
         return switch (hudSize) {
+            case XXSMALL -> 42;
+            case XSMALL -> 45;
             case SMALL -> 48;
             case NORMAL -> 54;
             case LARGE -> 62;
         };
     }
 
-    public int barHeight() {
+    private int baseBarHeight() {
         return switch (hudSize) {
+            case XXSMALL -> 6;
+            case XSMALL -> 7;
             case SMALL -> 8;
             case NORMAL -> 10;
             case LARGE -> 13;
         };
     }
 
+    private void clampScaleToSizeLimits() {
+        int baseWidth = basePanelWidth();
+        int baseHeight = basePanelHeight();
+        float minScale = Math.max(
+                MIN_PANEL_WIDTH / (float) baseWidth,
+                MIN_PANEL_HEIGHT / (float) baseHeight
+        );
+        float maxScale = Math.min(
+                MAX_PANEL_WIDTH / (float) baseWidth,
+                MAX_PANEL_HEIGHT / (float) baseHeight
+        );
+        hudScale = clamp(hudScale, minScale, maxScale);
+    }
+
     public int calculateX(int guiWidth, int panelWidth) {
+        return clamp(calculateBaseX(guiWidth, panelWidth) + offsetX, 2, Math.max(2, guiWidth - panelWidth - 2));
+    }
+
+    public int calculateY(int guiHeight, int panelHeight) {
+        return clamp(calculateBaseY(guiHeight, panelHeight) + offsetY, 2, Math.max(2, guiHeight - panelHeight - 2));
+    }
+
+    private int calculateBaseX(int guiWidth, int panelWidth) {
         int margin = 8;
-        int x = switch (hudPosition) {
+        return switch (hudPosition) {
             case TOP_LEFT, CENTER_LEFT, BOTTOM_LEFT -> margin;
             case TOP_CENTER, CENTER, BOTTOM_CENTER -> (guiWidth - panelWidth) / 2;
             case TOP_RIGHT, CENTER_RIGHT, BOTTOM_RIGHT -> guiWidth - panelWidth - margin;
         };
-        return clamp(x + offsetX, 2, Math.max(2, guiWidth - panelWidth - 2));
     }
 
-    public int calculateY(int guiHeight, int panelHeight) {
+    private int calculateBaseY(int guiHeight, int panelHeight) {
         int topMargin = 8;
         int bottomMargin = 44;
-        int y = switch (hudPosition) {
+        return switch (hudPosition) {
             case TOP_LEFT, TOP_CENTER, TOP_RIGHT -> topMargin;
             case CENTER_LEFT, CENTER, CENTER_RIGHT -> (guiHeight - panelHeight) / 2;
             case BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT -> guiHeight - panelHeight - bottomMargin;
         };
-        return clamp(y + offsetY, 2, Math.max(2, guiHeight - panelHeight - 2));
     }
 
     private static int parseInt(String value, int fallback, int min, int max) {
@@ -151,11 +277,26 @@ public final class QuickChestCapacityConfig {
         }
     }
 
+    private static float parseFloat(String value, float fallback, float min, float max) {
+        if (value == null) return fallback;
+        try {
+            return clamp(Float.parseFloat(value), min, max);
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
+    }
+
     private static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }
 
+    private static float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
     public enum HudSize {
+        XXSMALL("XXSmall"),
+        XSMALL("XSmall"),
         SMALL("Small"),
         NORMAL("Normal"),
         LARGE("Large");
