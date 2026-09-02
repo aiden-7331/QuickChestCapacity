@@ -3,13 +3,16 @@
   "id": "quickchestcapacity",
   "version": "${version}",
   "name": "QuickChestCapacity",
-  "description": "Shows a chest-mounted capacity indicator with item count, percentage and a colour-coded bar.",
+  "description": "Shows chest capacity at a glance with live updates, including items moved by hoppers.",
   "authors": [
     "Aiden"
   ],
   "license": "MIT",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": [
+      "com.aiden.quickchestcapacity.QuickChestCapacity"
+    ],
     "client": [
       "com.aiden.quickchestcapacity.QuickChestCapacityClient"
     ]

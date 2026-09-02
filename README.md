@@ -1,24 +1,21 @@
-# QuickChestCapacity 1.4.0 — Minecraft 26.2 Fabric
+# QuickChestCapacity v1.3.1 — Live Hopper Update
 
-QuickChestCapacity now renders the capacity indicator directly on the front of the chest in the 3D world instead of using a large screen HUD popup.
+This keeps the v1.3 bottom-centre HUD style and adds live chest capacity updates.
 
-## Capacity
-- Single chest: 27 slots × 64 = **1,728 items**
-- Double chest: 54 slots × 64 = **3,456 items**
-- Counts the actual number of items currently stored in the chest.
+## New in 1.3.1
+- The item number updates while hoppers add items.
+- The item number updates while hoppers remove items.
+- The percentage and segmented green/yellow/orange/red bar update with it.
+- Single chests use 27 slots / 1728 items.
+- Double chests use 54 slots / 3456 items.
+- The v1.3 bottom-screen panel is unchanged in style.
 
-## Chest-mounted display
-When you aim at a scanned chest, the front of the chest shows:
-- Actual items / maximum items
-- A segmented green → yellow → orange → red capacity bar
-- EMPTY / PARTIALLY FULL / NEARLY FULL / FULL
-- Percentage full
-- Double-chest indicators are centred across both connected chest halves.
+## Important multiplayer note
+Minecraft does not normally send a closed chest's inventory contents to a client. For live hopper updates, QuickChestCapacity now asks the logical server for the current count.
 
-The old bottom-centre HUD popup has been removed.
+- **Singleplayer:** works automatically because the same mod JAR runs on the integrated server.
+- **Multiplayer:** install the same QuickChestCapacity JAR on the Fabric server for live updates.
+- **Server without the mod:** the old v1.3 "open once to scan" fallback still works, but hopper changes while the chest is closed cannot be known live.
 
-## Client-side limitation
-On multiplayer servers, the client normally does not receive a chest inventory until that chest is opened. Open each chest once to scan it. Re-open it later to refresh the remembered item count after its contents change.
-
-## Building with GitHub Actions
-Upload/replace these project files in your existing QuickChestCapacity GitHub repository. Your existing workflow can build it. The finished JAR will be `quickchestcapacity-1.4.0.jar`.
+## Build
+Minecraft 26.2, Java 25, Fabric Loader 0.19.3, Fabric API 0.158.0+26.2.
