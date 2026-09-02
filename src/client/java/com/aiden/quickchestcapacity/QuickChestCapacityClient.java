@@ -144,19 +144,23 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
         graphics.text(minecraft.font, chestType, chestTypeX, y + 8, 0xFFFFC400, true);
         graphics.text(minecraft.font, amount, amountX, y + 8, 0xFFFFFFFF, true);
 
-        int barX = x + 10;
+        // Slightly smaller, centred capacity bar.
+        int barWidth = panelWidth - 36;
+        int barX = x + (panelWidth - barWidth) / 2;
         int barY = y + 25;
-        int barWidth = panelWidth - 20;
-        int barHeight = 13;
+        int barHeight = 11;
         int segments = 20;
         int gap = 2;
-        int segmentWidth = (barWidth - gap * (segments - 1)) / segments;
+        int usableSegmentWidth = barWidth - gap * (segments - 1);
         int filled = Math.round(percent / 100.0f * segments);
 
         graphics.fill(barX - 2, barY - 2, barX + barWidth + 2, barY + barHeight + 2, 0xFF080808);
 
         for (int i = 0; i < segments; i++) {
-            int sx = barX + i * (segmentWidth + gap);
+            // Divide the usable pixels across all segments, including any remainder.
+            // This makes the final segment end exactly at barX + barWidth.
+            int sx = barX + i * gap + (i * usableSegmentWidth) / segments;
+            int ex = barX + i * gap + ((i + 1) * usableSegmentWidth) / segments;
             int color;
             if (i >= filled) {
                 color = 0xFF242424;
@@ -172,7 +176,7 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
                     color = 0xFFE02B2B;
                 }
             }
-            graphics.fill(sx, barY, sx + segmentWidth, barY + barHeight, color);
+            graphics.fill(sx, barY, ex, barY + barHeight, color);
         }
 
         String percentText = percent + "%";
