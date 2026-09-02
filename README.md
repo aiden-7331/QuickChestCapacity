@@ -1,32 +1,22 @@
-# QuickChestCapacity
+# QuickChestCapacity 1.3.0 — Minecraft 26.2 Fabric
 
-A small client-side Fabric mod for Minecraft Java Edition 26.2.
+QuickChestCapacity shows an image-style chest capacity card while you look at a chest.
 
-## What it does
+## Capacity
+- Single chest: 27 slots × 64 = **1,728 items**
+- Double chest: 54 slots × 64 = **3,456 items**
+- The mod counts the actual number of items currently stored in the chest.
 
-When a chest-style container is open, the mod displays:
+## Display
+When you point at a scanned chest, a dark Minecraft-style panel appears above the hotbar with:
+- SINGLE CHEST / DOUBLE CHEST
+- Actual items / maximum items
+- A segmented green → yellow → orange → red capacity bar
+- EMPTY / PARTIALLY FULL / NEARLY FULL / FULL
+- Percentage full
 
-- `Chest Capacity: 18/27`
-- `Free Slots: 9`
+## Client-side limitation
+On multiplayer servers, the client normally does not receive the inventory of a chest until it is opened. Open each chest once to scan it. The saved reading is then shown when you look at it later. Re-open the chest to refresh the saved count after its contents change.
 
-It counts occupied slots, not the total number of individual items.
-A double chest automatically has a capacity of 54 slots.
-
-## Target versions
-
-- Minecraft: 26.2
-- Java: 25
-- Fabric Loader: 0.19.3+
-- Fabric API: 0.156.0+26.2
-- Fabric Loom: 1.17
-
-## Source layout
-
-The main mod code is here:
-
-`src/client/java/com/aiden/quickchestcapacity/QuickChestCapacityClient.java`
-
-## Build
-
-A Java 25 + Gradle/Fabric environment is required to compile source code into a mod JAR.
-The resulting JAR will be placed in `build/libs/` after a successful Gradle build.
+## Building with GitHub Actions
+Upload/replace these project files in your existing QuickChestCapacity GitHub repository. Your existing build workflow can build the mod. The finished JAR will be `quickchestcapacity-1.3.0.jar`.

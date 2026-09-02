@@ -3,7 +3,7 @@
   "id": "quickchestcapacity",
   "version": "${version}",
   "name": "QuickChestCapacity",
-  "description": "Shows how many chest slots are occupied and how many are free while a chest-style container is open.",
+  "description": "Shows remembered chest capacity at a glance when you look at a chest, without needing to reopen it.",
   "authors": [
     "Aiden"
   ],
