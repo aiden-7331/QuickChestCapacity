@@ -3,7 +3,7 @@
   "id": "quickchestcapacity",
   "version": "${version}",
   "name": "QuickChestCapacity",
-  "description": "Shows remembered chest capacity at a glance when you look at a chest, without needing to reopen it.",
+  "description": "Shows a chest-mounted capacity indicator with item count, percentage and a colour-coded bar.",
   "authors": [
     "Aiden"
   ],

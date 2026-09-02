@@ -1,22 +1,24 @@
-# QuickChestCapacity 1.3.0 — Minecraft 26.2 Fabric
+# QuickChestCapacity 1.4.0 — Minecraft 26.2 Fabric
 
-QuickChestCapacity shows an image-style chest capacity card while you look at a chest.
+QuickChestCapacity now renders the capacity indicator directly on the front of the chest in the 3D world instead of using a large screen HUD popup.
 
 ## Capacity
 - Single chest: 27 slots × 64 = **1,728 items**
 - Double chest: 54 slots × 64 = **3,456 items**
-- The mod counts the actual number of items currently stored in the chest.
+- Counts the actual number of items currently stored in the chest.
 
-## Display
-When you point at a scanned chest, a dark Minecraft-style panel appears above the hotbar with:
-- SINGLE CHEST / DOUBLE CHEST
+## Chest-mounted display
+When you aim at a scanned chest, the front of the chest shows:
 - Actual items / maximum items
 - A segmented green → yellow → orange → red capacity bar
 - EMPTY / PARTIALLY FULL / NEARLY FULL / FULL
 - Percentage full
+- Double-chest indicators are centred across both connected chest halves.
+
+The old bottom-centre HUD popup has been removed.
 
 ## Client-side limitation
-On multiplayer servers, the client normally does not receive the inventory of a chest until it is opened. Open each chest once to scan it. The saved reading is then shown when you look at it later. Re-open the chest to refresh the saved count after its contents change.
+On multiplayer servers, the client normally does not receive a chest inventory until that chest is opened. Open each chest once to scan it. Re-open it later to refresh the remembered item count after its contents change.
 
 ## Building with GitHub Actions
-Upload/replace these project files in your existing QuickChestCapacity GitHub repository. Your existing build workflow can build the mod. The finished JAR will be `quickchestcapacity-1.3.0.jar`.
+Upload/replace these project files in your existing QuickChestCapacity GitHub repository. Your existing workflow can build it. The finished JAR will be `quickchestcapacity-1.4.0.jar`.
