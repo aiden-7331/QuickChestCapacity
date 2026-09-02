@@ -140,10 +140,23 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
             return;
         }
 
-        int panelWidth = CONFIG.panelWidth();
-        int panelHeight = CONFIG.panelHeight();
-        int x = CONFIG.calculateX(graphics.guiWidth(), panelWidth);
-        int y = CONFIG.calculateY(graphics.guiHeight(), panelHeight);
+        float scale = CONFIG.scale();
+        int scaledPanelWidth = CONFIG.panelWidth();
+        int scaledPanelHeight = CONFIG.panelHeight();
+        int screenX = CONFIG.calculateX(graphics.guiWidth(), scaledPanelWidth);
+        int screenY = CONFIG.calculateY(graphics.guiHeight(), scaledPanelHeight);
+
+        // Render one normal-sized 194x54 HUD, then scale the entire thing as a unit.
+        // Text, numbers, bar, spacing and borders all shrink together, so even 1%
+        // cannot cause the amount text to overlap the capacity bar.
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(screenX, screenY);
+        graphics.pose().scale(scale, scale);
+
+        int panelWidth = QuickChestCapacityConfig.BASE_PANEL_WIDTH;
+        int panelHeight = QuickChestCapacityConfig.BASE_PANEL_HEIGHT;
+        int x = 0;
+        int y = 0;
 
         graphics.fill(x, y, x + panelWidth, y + panelHeight, 0xD912120F);
         graphics.outline(x, y, panelWidth, panelHeight, 0xFFF0C14B);
@@ -160,56 +173,37 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
                     : "OPEN THIS CHEST ONCE TO SCAN";
             int tx = x + (panelWidth - minecraft.font.width(title)) / 2;
             int hx = x + (panelWidth - minecraft.font.width(hint)) / 2;
-            int titleY = y + Math.max(7, panelHeight / 5);
-            int hintY = y + panelHeight - 18;
-            graphics.text(minecraft.font, title, tx, titleY, 0xFFFFC400, true);
-            graphics.text(minecraft.font, hint, hx, hintY, 0xFFFFFFFF, true);
+            graphics.text(minecraft.font, title, tx, y + 10, 0xFFFFC400, true);
+            graphics.text(minecraft.font, hint, hx, y + 30, 0xFFFFFFFF, true);
+            graphics.pose().popMatrix();
             return;
         }
 
         CapacityInfo info = displayInfo;
         int percent = info.maxItems == 0 ? 0 : Math.min(100, Math.round((info.itemCount * 100.0f) / info.maxItems));
-        // Custom corner-resizing can make any preset narrow, so automatically
-        // switch to the shorter labels when needed to avoid text overlap.
-        boolean xxSmall = CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.XXSMALL || panelWidth < 145;
-        boolean xSmall = !xxSmall && (CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.XSMALL || panelWidth < 165);
-        boolean compact = xxSmall || xSmall;
-
         String chestType = info.slots == 54 ? "DOUBLE CHEST" : "SINGLE CHEST";
-        if (xSmall) {
-            chestType = info.slots == 54 ? "DOUBLE" : "SINGLE";
-        } else if (xxSmall) {
-            chestType = info.slots == 54 ? "D.CHEST" : "S.CHEST";
-        }
-
-        String amount = compact
-                ? info.itemCount + "/" + info.maxItems
-                : info.itemCount + " / " + info.maxItems;
-        String status = compact && percent > 0 && percent <= 70 ? "PARTIAL" : statusText(percent);
+        String amount = info.itemCount + " / " + info.maxItems;
+        String status = statusText(percent);
         int statusColor = statusColor(percent);
 
-        int sidePadding = panelWidth < 145 ? 4 : panelWidth < 165 ? 5 : panelWidth < 185 ? 6 : 8;
+        int sidePadding = 8;
         int chestTypeX = x + sidePadding;
         int amountX = x + panelWidth - sidePadding - minecraft.font.width(amount);
-        int titleY = y + (CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.LARGE ? 9 : compact ? 5 : 7);
-        graphics.text(minecraft.font, chestType, chestTypeX, titleY, 0xFFFFC400, true);
-        graphics.text(minecraft.font, amount, amountX, titleY, 0xFFFFFFFF, true);
+        graphics.text(minecraft.font, chestType, chestTypeX, y + 7, 0xFFFFC400, true);
+        graphics.text(minecraft.font, amount, amountX, y + 7, 0xFFFFFFFF, true);
 
-        int barInset = panelWidth < 145 ? 24 : panelWidth < 165 ? 28 : panelWidth < 185 ? 34 : 40;
-        int barWidth = panelWidth - barInset;
+        int barWidth = panelWidth - 40;
         int barX = x + (panelWidth - barWidth) / 2;
-        int barY = y + panelHeight / 2 - (compact ? 2 : 3);
-        int barHeight = CONFIG.barHeight();
-        int segments = compact ? 16 : 20;
-        int gap = compact ? 1 : 2;
+        int barY = y + 24;
+        int barHeight = QuickChestCapacityConfig.BASE_BAR_HEIGHT;
+        int segments = 20;
+        int gap = 2;
         int usableSegmentWidth = barWidth - gap * (segments - 1);
         int filled = Math.round(percent / 100.0f * segments);
 
         graphics.fill(barX - 2, barY - 2, barX + barWidth + 2, barY + barHeight + 2, 0xFF080808);
 
         for (int i = 0; i < segments; i++) {
-            // Divide the usable pixels across all segments, including any remainder.
-            // This makes the final segment end exactly at barX + barWidth.
             int sx = barX + i * gap + (i * usableSegmentWidth) / segments;
             int ex = barX + i * gap + ((i + 1) * usableSegmentWidth) / segments;
             int color;
@@ -231,9 +225,10 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
         }
 
         String percentText = percent + "%";
-        int statusY = y + panelHeight - (compact ? 12 : 14);
-        graphics.text(minecraft.font, status, x + sidePadding, statusY, statusColor, true);
-        graphics.text(minecraft.font, percentText, x + panelWidth - sidePadding - minecraft.font.width(percentText), statusY, statusColor, true);
+        graphics.text(minecraft.font, status, x + sidePadding, y + 40, statusColor, true);
+        graphics.text(minecraft.font, percentText, x + panelWidth - sidePadding - minecraft.font.width(percentText), y + 40, statusColor, true);
+
+        graphics.pose().popMatrix();
     }
 
     private static String statusText(int percent) {
