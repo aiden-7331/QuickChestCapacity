@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "quickchestcapacity",
+  "version": "${version}",
+  "name": "QuickChestCapacity",
+  "description": "Shows how many chest slots are occupied and how many are free while a chest-style container is open.",
+  "authors": [
+    "Aiden"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.aiden.quickchestcapacity.QuickChestCapacityClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
