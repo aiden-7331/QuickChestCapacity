@@ -59,7 +59,7 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
             lookedAtChestPos = null;
             lookedAtInfo = null;
 
-            if (client.player == null || client.level == null || client.screen != null) {
+            if (client.player == null || client.level == null || client.gui.screen() != null) {
                 return;
             }
 
@@ -81,7 +81,7 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
 
     private static void renderCapacityHud(GuiGraphicsExtractor graphics, net.minecraft.client.DeltaTracker deltaTracker) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || lookedAtChestPos == null || minecraft.screen != null) {
+        if (minecraft.player == null || lookedAtChestPos == null || minecraft.gui.screen() != null) {
             return;
         }
 
