@@ -1,4 +1,4 @@
-# QuickChestCapacity v1.3.8 — Customisable HUD + Live Hoppers
+# QuickChestCapacity v1.3.9 — Customisable HUD + Live Hoppers
 
 QuickChestCapacity shows how full the chest you are looking at is, while keeping the v1.3 segmented HUD style.
 
@@ -52,3 +52,10 @@ The settings menu now includes **XXSmall**, **XSmall**, **Small**, **Normal**, a
 - Bottom-right resize handle still works and updates the slider value.
 - The whole HUD is proportionally scaled, fixing text/number overlap at very small sizes.
 - Reset and Done buttons have been moved higher in the menu.
+
+
+## v1.3.9 — crisp drag preview
+- Removed Minecraft's screen blur while the HUD is being dragged or resized.
+- The settings GUI still hides during placement and returns when the mouse is released.
+- The HUD panel becomes fully opaque only while dragging/resizing so text and the bar stay sharp and easy to position.
+- Normal gameplay keeps the original slightly transparent HUD appearance.

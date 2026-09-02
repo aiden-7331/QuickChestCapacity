@@ -178,6 +178,22 @@ public final class QuickChestCapacitySettingsScreen extends Screen {
     }
 
     @Override
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        // Minecraft normally blurs the world behind a Screen. During HUD placement that blur
+        // also makes the HUD preview look soft, so skip the background stratum completely
+        // while dragging/resizing. The normal settings blur comes back as soon as the mouse
+        // is released.
+        if (draggingHud || resizingHud) {
+            return;
+        }
+        super.extractBackground(graphics, mouseX, mouseY, delta);
+    }
+
+    public boolean isEditingHud() {
+        return draggingHud || resizingHud;
+    }
+
+    @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         // While moving/resizing, hide the entire settings GUI so the player can see the world
         // and the live HUD preview clearly. Releasing the mouse brings the menu straight back.

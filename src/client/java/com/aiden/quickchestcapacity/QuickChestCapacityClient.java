@@ -132,6 +132,8 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
     private static void renderCapacityHud(GuiGraphicsExtractor graphics, net.minecraft.client.DeltaTracker deltaTracker) {
         Minecraft minecraft = Minecraft.getInstance();
         boolean settingsOpen = minecraft.gui.screen() instanceof QuickChestCapacitySettingsScreen;
+        boolean editingHud = settingsOpen
+                && ((QuickChestCapacitySettingsScreen) minecraft.gui.screen()).isEditingHud();
 
         if (minecraft.player == null) {
             return;
@@ -158,7 +160,11 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
         int x = 0;
         int y = 0;
 
-        graphics.fill(x, y, x + panelWidth, y + panelHeight, 0xD912120F);
+        // Use a fully opaque panel while moving/resizing so the preview stays crisp and
+        // easy to place against any world background. Normal gameplay keeps the original
+        // slightly transparent v1.3 look.
+        int panelBackground = editingHud ? 0xFF12120F : 0xD912120F;
+        graphics.fill(x, y, x + panelWidth, y + panelHeight, panelBackground);
         graphics.outline(x, y, panelWidth, panelHeight, 0xFFF0C14B);
         graphics.outline(x + 2, y + 2, panelWidth - 4, panelHeight - 4, 0xFF5C421B);
 
