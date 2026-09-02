@@ -3,11 +3,15 @@ package com.aiden.quickchestcapacity;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
@@ -22,6 +26,18 @@ import net.minecraft.world.phys.BlockHitResult;
 
 public final class QuickChestCapacityClient implements ClientModInitializer {
     private static final String MOD_ID = "quickchestcapacity";
+    private static final QuickChestCapacityConfig CONFIG = QuickChestCapacityConfig.load();
+    private static final KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(
+            Identifier.fromNamespaceAndPath(MOD_ID, "settings")
+    );
+    private static final KeyMapping OPEN_SETTINGS_KEY = KeyMappingHelper.registerKeyMapping(
+            new KeyMapping(
+                    "key.quickchestcapacity.open_settings",
+                    InputConstants.Type.KEYSYM,
+                    InputConstants.KEY_K,
+                    KEY_CATEGORY
+            )
+    );
     private static final Map<BlockPos, CapacityInfo> KNOWN_CHESTS = new HashMap<>();
     private static final int LIVE_REFRESH_TICKS = 4; // 5 updates per second at 20 TPS.
 
@@ -70,6 +86,14 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
 
         // Track the chest under the crosshair and request a fresh value while looking at it.
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (OPEN_SETTINGS_KEY.consumeClick()) {
+                if (client.gui.screen() instanceof QuickChestCapacitySettingsScreen) {
+                    client.gui.setScreen(null);
+                } else if (client.gui.screen() == null) {
+                    client.gui.setScreen(new QuickChestCapacitySettingsScreen(CONFIG));
+                }
+            }
+
             lookedAtChestPos = null;
             lookedAtInfo = null;
 
@@ -107,48 +131,60 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
 
     private static void renderCapacityHud(GuiGraphicsExtractor graphics, net.minecraft.client.DeltaTracker deltaTracker) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || lookedAtChestPos == null || minecraft.gui.screen() != null) {
+        boolean settingsOpen = minecraft.gui.screen() instanceof QuickChestCapacitySettingsScreen;
+
+        if (minecraft.player == null) {
+            return;
+        }
+        if (!settingsOpen && (lookedAtChestPos == null || minecraft.gui.screen() != null)) {
             return;
         }
 
-        int panelWidth = 194;
-        int panelHeight = 54;
-        int x = (graphics.guiWidth() - panelWidth) / 2;
-        int y = graphics.guiHeight() - 98;
+        int panelWidth = CONFIG.panelWidth();
+        int panelHeight = CONFIG.panelHeight();
+        int x = CONFIG.calculateX(graphics.guiWidth(), panelWidth);
+        int y = CONFIG.calculateY(graphics.guiHeight(), panelHeight);
 
         graphics.fill(x, y, x + panelWidth, y + panelHeight, 0xD912120F);
         graphics.outline(x, y, panelWidth, panelHeight, 0xFFF0C14B);
         graphics.outline(x + 2, y + 2, panelWidth - 4, panelHeight - 4, 0xFF5C421B);
 
-        if (lookedAtInfo == null) {
+        CapacityInfo displayInfo = settingsOpen
+                ? new CapacityInfo(1728, 3456, 54)
+                : lookedAtInfo;
+
+        if (displayInfo == null) {
             String title = "CHEST INDICATOR";
             String hint = ClientPlayNetworking.canSend(RequestCapacityPayload.TYPE)
                     ? "READING CHEST..."
                     : "OPEN THIS CHEST ONCE TO SCAN";
             int tx = x + (panelWidth - minecraft.font.width(title)) / 2;
             int hx = x + (panelWidth - minecraft.font.width(hint)) / 2;
-            graphics.text(minecraft.font, title, tx, y + 10, 0xFFFFC400, true);
-            graphics.text(minecraft.font, hint, hx, y + 30, 0xFFFFFFFF, true);
+            int titleY = y + Math.max(7, panelHeight / 5);
+            int hintY = y + panelHeight - 18;
+            graphics.text(minecraft.font, title, tx, titleY, 0xFFFFC400, true);
+            graphics.text(minecraft.font, hint, hx, hintY, 0xFFFFFFFF, true);
             return;
         }
 
-        CapacityInfo info = lookedAtInfo;
+        CapacityInfo info = displayInfo;
         int percent = info.maxItems == 0 ? 0 : Math.min(100, Math.round((info.itemCount * 100.0f) / info.maxItems));
         String chestType = info.slots == 54 ? "DOUBLE CHEST" : "SINGLE CHEST";
         String amount = info.itemCount + " / " + info.maxItems;
         String status = statusText(percent);
         int statusColor = statusColor(percent);
 
-        int chestTypeX = x + 8;
-        int amountX = x + panelWidth - 8 - minecraft.font.width(amount);
-        graphics.text(minecraft.font, chestType, chestTypeX, y + 7, 0xFFFFC400, true);
-        graphics.text(minecraft.font, amount, amountX, y + 7, 0xFFFFFFFF, true);
+        int sidePadding = CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.SMALL ? 6 : 8;
+        int chestTypeX = x + sidePadding;
+        int amountX = x + panelWidth - sidePadding - minecraft.font.width(amount);
+        int titleY = y + (CONFIG.hudSize() == QuickChestCapacityConfig.HudSize.LARGE ? 9 : 7);
+        graphics.text(minecraft.font, chestType, chestTypeX, titleY, 0xFFFFC400, true);
+        graphics.text(minecraft.font, amount, amountX, titleY, 0xFFFFFFFF, true);
 
-        // Smaller, slightly lower centred capacity bar.
         int barWidth = panelWidth - 40;
         int barX = x + (panelWidth - barWidth) / 2;
-        int barY = y + 24;
-        int barHeight = 10;
+        int barY = y + panelHeight / 2 - 3;
+        int barHeight = CONFIG.barHeight();
         int segments = 20;
         int gap = 2;
         int usableSegmentWidth = barWidth - gap * (segments - 1);
@@ -180,8 +216,9 @@ public final class QuickChestCapacityClient implements ClientModInitializer {
         }
 
         String percentText = percent + "%";
-        graphics.text(minecraft.font, status, x + 8, y + 40, statusColor, true);
-        graphics.text(minecraft.font, percentText, x + panelWidth - 8 - minecraft.font.width(percentText), y + 40, statusColor, true);
+        int statusY = y + panelHeight - 14;
+        graphics.text(minecraft.font, status, x + sidePadding, statusY, statusColor, true);
+        graphics.text(minecraft.font, percentText, x + panelWidth - sidePadding - minecraft.font.width(percentText), statusY, statusColor, true);
     }
 
     private static String statusText(int percent) {

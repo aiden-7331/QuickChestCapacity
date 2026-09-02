@@ -3,7 +3,7 @@
   "id": "quickchestcapacity",
   "version": "${version}",
   "name": "QuickChestCapacity",
-  "description": "Shows chest capacity at a glance with live updates, including items moved by hoppers.",
+  "description": "Shows chest capacity at a glance with a customisable HUD and live hopper updates.",
   "authors": [
     "Aiden"
   ],
